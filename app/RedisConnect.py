@@ -10,7 +10,6 @@ class Redis:
         self.date = None
 
     async def update_rate(self):
-        print("ssss")
         rate = await parsing_current_rate()
         for key in rate:
             self.r.set(key, rate[key])
