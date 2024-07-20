@@ -6,7 +6,7 @@ from .ParsingCurrentRate import parsing_current_rate
 
 class Redis:
     def __init__(self):
-        self.r = redis.Redis(host='localhost', port=6379)
+        self.r = redis.Redis(host='redis', port=6379)
         self.date = None
 
     async def update_rate(self):
