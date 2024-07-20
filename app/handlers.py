@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, types
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from app.RedisConnect import Redis
@@ -10,7 +10,14 @@ redis = Redis()
 @router.message(CommandStart())
 async def start(message: Message):
     await message.answer('''/rates - узнать актуальный курс валют 
-/exchange - AUD RUB 100 - узнать сколько рублей в 100 Австралийских долларах 
+/exchange AUD RUB 100 - узнать сколько рублей в 100 Австралийских долларах 
+    ''')
+
+
+@router.message(Command('help'))
+async def start(message: Message):
+    await message.answer('''/rates - узнать актуальный курс валют 
+/exchange AUD RUB 100 - узнать сколько рублей в 100 Австралийских долларах 
     ''')
 
 
@@ -22,11 +29,13 @@ async def cmd_exchange(message: Message):
         base = args[2]  # RUB
         amount = args[3]
         print(target, base, amount)
-        rate = redis.get_rate(target)
+        rate_target = redis.get_rate(target)
+        rate_base = redis.get_rate(base)
         try:
-            decoded_rate = rate.decode('utf-8')
-            result = float(decoded_rate.replace(',', '.')) * float(amount)
-            await message.answer(str(result))
+            decoded_rate_target = rate_target.decode('utf-8')
+            decoded_rate_base = rate_base.decode('utf-8')
+            result = float(decoded_rate_target.replace(',', '.')) / float(decoded_rate_base.replace(',', '.')) * float(amount)
+            await message.answer(f"{amount} {target} = {str(result)} {base}.")
         except:
             await message.answer('Некорректные аргументы. Используйте /exchange USD RUB 10')
     else:
@@ -35,8 +44,13 @@ async def cmd_exchange(message: Message):
 
 @router.message(Command('rates'))
 async def cmd_rates(message: Message):
-    text = "Текущие курсы валют:\n"
+    text = "Текущие курсы валют к рублю:\n\n"
     for currency, rate in redis.get_all_rate().items():
         text += f"{currency}: {rate}\n"
+    await message.answer(text)
 
-    await message.reply(text)
+
+@router.message(F.text & ~F.command.commands)
+async def handle_invalid_commands(message: Message):
+    await message.answer("Извините, не могу обработать эту команду. Пожалуйста, воспользуйтесь доступными командами. Посмотреть доступные команды можно по комманде /start или /help")
+

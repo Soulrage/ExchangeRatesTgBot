@@ -11,7 +11,8 @@ async def fetch_xml_data():
 async def parsing_current_rate():
     xml_data = await fetch_xml_data()
     root = ET.fromstring(xml_data)
-    dict_current_rate = {"date": root.attrib['Date']}
+
+    dict_current_rate = {'RUB': 1}
     for valute in root.findall('Valute'):
         name = valute.find('CharCode').text
         value = valute.find('VunitRate').text
